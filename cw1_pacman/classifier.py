@@ -26,7 +26,7 @@ class DecisionTree:
     def predict(self):
         pass
 
-class Node:
+class DecisionNode:
     def __init__(self) -> None:
         # pointers to child nodes
         self.children = []
@@ -36,7 +36,7 @@ class Node:
     def predict(self):
         pass
 
-class Leaf:
+class LeafNode:
     def __init__(self) -> None:
         self.prediction = None
 
