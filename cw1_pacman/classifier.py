@@ -67,8 +67,8 @@ class DecisionTree:
             self.traverse(node.right)
             self.traverse(node.left)
 
-    def predict(self):
-        pass
+    def predict(self, data):
+        self.head.predict(data)
 
 
 class DecisionNode:
@@ -87,15 +87,18 @@ class DecisionNode:
     def pluralityValue(self):
         return random.choice(self.value)
 
-    def predict(self):
-        pass
+    def predict(self, data):
+        if data[self.featureIndex] == 0:
+            return self.left.predict(data)
+        else:
+            return self.right.predict(data)
 
 
 class LeafNode:
     def __init__(self, prediction):
         self.prediction = prediction
 
-    def predict(self):
+    def predict(self, data):
         return self.prediction
 
 
@@ -110,7 +113,8 @@ class Classifier:
         self.decisionTree.fit(data, target)
 
     def predict(self, data, legal=None):
-        return 1
+        # use legal moves??
+        return self.decisionTree.predict(data)
 
 
 if __name__ == '__main__':
