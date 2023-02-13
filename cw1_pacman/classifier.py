@@ -10,12 +10,11 @@ class DecisionTree:
     def __init__(self):
         self.head = None
 
-    def fit(self, data, target, node=None, split_on=None):
+    def fit(self, data, target, node=None):
 
         # check if node is the root node
         if node is None:
             self.head = DecisionNode(data, None)
-            split_on = 0
             node = self.head
 
         # if there are no example in this branch then make it a leaf with its parents plurality value for class
@@ -27,7 +26,7 @@ class DecisionTree:
         #     return Leaf(node.pluralityValue())
 
         # if there are no more features to split on
-        elif split_on == 24:
+        elif len(set(data)) == 1:
             return LeafNode(node.pluralityValue())
 
         # if all the example have the same classification then make leaf with that classification
@@ -35,26 +34,34 @@ class DecisionTree:
             return LeafNode(target[0])
 
         else:
-            right = []
-            left = []
+            # right = []
+            # left = []
 
-            # go through data and split on features --> binary split
-            for i in list(zip(data, target)):
-                (right if int(i[0][split_on]) else left).append(i)
+            splitOnIndex = self.featureIndexToSplitOn(data, target)
 
             rightData, rightTarget, leftData, leftTarget = [], [], [], []
+            
+            # go through data and split on features --> binary split
+            for i in list(zip(data, target)):
+                #(right if int(i[0][splitOnIndex]) else left).append(i)
+                if int(i[0][splitOnIndex]):
+                    rightData.append(i[0])
+                    rightTarget.append(i[1])
+                else:
+                    leftData.append(i[0])
+                    leftTarget.append(i[1])
 
-            if len(right) != 0:
-                rightData, rightTarget = zip(*right)
+            # if len(right) != 0:
+            #     rightData, rightTarget = zip(*right)
 
-            if len(left) != 0:
-                leftData, leftTarget = zip(*left)
+            # if len(left) != 0:
+            #     leftData, leftTarget = zip(*left)
 
             # recurse child nodes of current node incrementing which features to split on
-            node.right = self.fit(rightData, rightTarget, DecisionNode(rightTarget, node), split_on+1)
-            node.left = self.fit(leftData, leftTarget, DecisionNode(leftTarget, node), split_on+1)
+            node.right = self.fit(rightData, rightTarget, DecisionNode(rightTarget, node))
+            node.left = self.fit(leftData, leftTarget, DecisionNode(leftTarget, node))
 
-            node.featureIndex = split_on
+            node.featureIndex = splitOnIndex
 
             return node
 
