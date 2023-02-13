@@ -14,13 +14,13 @@ class DecisionTree:
 
         # check if node is the root node
         if node is None:
-            self.head = Node(data, None)
+            self.head = DecisionNode(data, None)
             split_on = 0
             node = self.head
 
         # if there are no example in this branch then make it a leaf with its parents plurality value for class
         if len(data) == 0:
-            return Leaf(node.parent.pluralityValue())
+            return LeafNode(node.parent.pluralityValue())
 
         # keep this brain hurt but keep
         # elif len(set(data)) == 1:
@@ -28,11 +28,11 @@ class DecisionTree:
 
         # if there are no more features to split on
         elif split_on == 24:
-            return Leaf(node.pluralityValue())
+            return LeafNode(node.pluralityValue())
 
         # if all the example have the same classification then make leaf with that classification
         elif len(set(target)) == 1:
-            return Leaf(target[0])
+            return LeafNode(target[0])
 
         else:
             right = []
