@@ -7,30 +7,30 @@ import random
 
 
 def featureIndexToSplitOn(features, data, target):
-    split_index = [gini(feature_index, data, target) for feature_index in range(len(features))]
-    min_index = split_index.index(min(split_index))
+    splitIndex = [gini(feature_index, data, target) for feature_index in range(len(features))]
+    minIndex = splitIndex.index(min(splitIndex))
 
-    return min_index
+    return minIndex
 
 
 def gini(feature_index, data, target):
     one, zero = [], []
-    target_counter = [[0] * 4, [0] * 4]
+    targetCounter = [[0] * 4, [0] * 4]
 
     for i in list(zip(data, target)):
         (one if int(i[0][feature_index]) else zero).append(i)
-        target_counter[int(i[0][feature_index])][int(i[1])] += 1
+        targetCounter[int(i[0][feature_index])][int(i[1])] += 1
 
     si = [len(one), len(zero)]
     s = sum(si)
-    gini_impurity = 0
+    giniImpurity = 0
 
     for i in range(2):
-        gi = sum([j ** 2 for j in target_counter[i]])
+        gi = sum([j ** 2 for j in targetCounter[i]])
         gi = 1 - (gi / (s ** 2))
-        gini_impurity += (si[i] / s) * gi
+        giniImpurity += (si[i] / s) * gi
 
-    return gini_impurity
+    return giniImpurity
 
 
 def removeFeatureFromData(features, feature_index, data):
@@ -71,21 +71,21 @@ class DecisionTree:
             return LeafNode(target[0])
 
         else:
-            split_on = featureIndexToSplitOn(features, data, target)
+            splitOnIndex = featureIndexToSplitOn(features, data, target)
             rightData, rightTarget, leftData, leftTarget = [], [], [], []
 
-            node.featureIndex = features[split_on]
+            node.featureIndex = features[splitOnIndex]
 
             # go through data and split on features --> binary split
             for i in list(zip(data, target)):
-                if int(i[0][split_on]):
+                if int(i[0][splitOnIndex]):
                     rightData.append(i[0])
                     rightTarget.append(i[1])
                 else:
                     leftData.append(i[0])
                     leftTarget.append(i[1])
 
-            newFeatures, newRightData, newLeftData = removeFeatureFromData(features, split_on, [rightData, leftData])
+            newFeatures, newRightData, newLeftData = removeFeatureFromData(features, splitOnIndex, [rightData, leftData])
 
             # recurse child nodes of current node incrementing which features to split on
             # can change right_target to just right but do at end
