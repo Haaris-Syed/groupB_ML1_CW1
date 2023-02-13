@@ -71,7 +71,7 @@ class DecisionTree:
         pass
 
 
-class Node:
+class DecisionNode:
     def __init__(self, value, parent):
         # pointers to parent node and child nodes
         self.parent = parent
@@ -91,7 +91,7 @@ class Node:
         pass
 
 
-class Leaf:
+class LeafNode:
     def __init__(self, prediction):
         self.prediction = prediction
 
@@ -122,15 +122,3 @@ if __name__ == '__main__':
     dt.fit(X, y)
 
     dt.traverse(dt.head)
-
-class DecisionNode:
-    def __init__(self) -> None:
-        # pointers to child nodes
-        self.children = []
-        # feature index that we are splitting on
-        self.featureIndex = None
-
-
-class LeafNode:
-    def __init__(self) -> None:
-        self.prediction = None
