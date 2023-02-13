@@ -51,8 +51,8 @@ class DecisionTree:
                 leftData, leftTarget = zip(*left)
 
             # recurse child nodes of current node incrementing which features to split on
-            node.right = self.fit(rightData, rightTarget, Node(rightTarget, node), split_on+1)
-            node.left = self.fit(leftData, leftTarget, Node(leftTarget, node), split_on+1)
+            node.right = self.fit(rightData, rightTarget, DecisionNode(rightTarget, node), split_on+1)
+            node.left = self.fit(leftData, leftTarget, DecisionNode(leftTarget, node), split_on+1)
 
             node.featureIndex = split_on
 
@@ -60,7 +60,7 @@ class DecisionTree:
 
     # for testing purposes
     def traverse(self, node):
-        if isinstance(node, Leaf):
+        if isinstance(node, LeafNode):
             print(node.prediction)
         else:
             # print(node.featureIndex)
