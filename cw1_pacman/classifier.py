@@ -5,12 +5,24 @@
 import numpy as np
 import random
 
+# REDUCED ERROR PRUNING:
+# pre pruning -> prune subtrees as the tree grows based on a certain criteria (could potentially remove good splits later on)
+    # faster, more efficient
+# post pruning -> allow tree to grow to its max depth (tends to lead to more success)
+    # work bottom-up, pruning subtrees based on a criteria -> if a decision node has a greater gini impurity value than parent node then prune?
+        # if the validation error is reduced after pruning a tree, then prune it
+    # convert decision node into a leaf node to remove the subtree
+    # minimal cost-complexity pruning (ccp)? -> recursively finds the 'weakest link' in the tree and removes them
+        #  different values of alpha is used       
+
+
 
 def featureIndexToSplitOn(features, data, target):
     splitIndex = [gini(feature_index, data, target) for feature_index in range(len(features))]
-    minIndex = splitIndex.index(min(splitIndex))
+    giniValue = min(splitIndex)
+    minIndex = splitIndex.index(giniValue)
 
-    return minIndex
+    return minIndex, giniValue
 
 
 def gini(feature_index, data, target):
@@ -42,6 +54,15 @@ def removeFeatureFromData(features, feature_index, data):
 
     return features, data[0], data[1]
 
+def costComplexity(node):
+    # node t = impurity of decision node
+    # branch Tt = sum of leaf node impurities
+    # alpha a that we are calculating will be a number that will be assigned to each decision node
+        # with this number, we will prune the smallest ones first
+
+    # calculate cost complexity of every decision node
+    pass
+
 
 class DecisionTree:
     def __init__(self):
@@ -69,12 +90,13 @@ class DecisionTree:
         # if all the example have the same classification then make leaf with that classification
         elif len(set(target)) == 1:
             return LeafNode(target[0])
-
+        
         else:
-            splitOnIndex = featureIndexToSplitOn(features, data, target)
+            splitOnIndex, giniValue = featureIndexToSplitOn(features, data, target)
             rightData, rightTarget, leftData, leftTarget = [], [], [], []
 
             node.featureIndex = features[splitOnIndex]
+            node.giniValue = giniValue
 
             # go through data and split on features --> binary split
             for i in list(zip(data, target)):
@@ -119,6 +141,9 @@ class DecisionNode:
 
         # feature index that we are splitting on
         self.featureIndex = None
+
+        # track gini values of Decision Nodes to use a criteria for pruning
+        self.giniValue = None
 
     def pluralityValue(self):
         return random.choice(self.value)
