@@ -2,6 +2,8 @@
 # Lin Li/26-dec-2021
 #
 # Use the skeleton below for the classifier and insert your code here.
+from collections import deque
+from lib2to3.pytree import Leaf
 import numpy as np
 import random
 
@@ -54,16 +56,6 @@ def removeFeatureFromData(features, feature_index, data):
 
     return features, data[0], data[1]
 
-def costComplexity(node):
-    # node t = impurity of decision node
-    # branch Tt = sum of leaf node impurities
-    # alpha a that we are calculating will be a number that will be assigned to each decision node
-        # with this number, we will prune the smallest ones first
-
-    # calculate cost complexity of every decision node
-    pass
-
-
 class DecisionTree:
     def __init__(self):
         self.head = None
@@ -96,8 +88,7 @@ class DecisionTree:
             rightData, rightTarget, leftData, leftTarget = [], [], [], []
 
             node.featureIndex = features[splitOnIndex]
-            node.giniValue = giniValue
-
+            
             # go through data and split on features --> binary split
             for i in list(zip(data, target)):
                 if int(i[0][splitOnIndex]):
@@ -128,6 +119,37 @@ class DecisionTree:
     def predict(self, data):
         self.head.predict(data)
 
+    def prune(self, node, test):
+        if isinstance(node, LeafNode):
+            return
+        
+        # pruning in bottom-up fashion so we will go to the first decision node
+        # before the leaf node
+        self.prune(node.left)
+        self.prune(node.right)
+
+        # checking current decision node for pruning
+        originalNode = node
+        pruneNode = LeafNode(node.pluralityValue())
+
+        # measure accuracy with and without the decision node on test data
+        # accuracy = total number of correct predictions / all predictions
+        # check if the predictions in our decision tree matches that in the test data
+
+        # what does predict return?
+
+        beforePruning = self.head.predict(test)
+        node.left.parent, node.right.parent = originalNode
+
+        node = pruneNode
+        afterPruning = self.head.predict(test)
+
+        # if afterPruning >= beforePruning:
+            # prune the node -> pass the tree with the pruned node
+        # else
+            # keep the node -> pass the tree with the original node
+            # node = originalNode
+
 
 class DecisionNode:
     def __init__(self, value, parent):
@@ -141,9 +163,6 @@ class DecisionNode:
 
         # feature index that we are splitting on
         self.featureIndex = None
-
-        # track gini values of Decision Nodes to use a criteria for pruning
-        self.giniValue = None
 
     def pluralityValue(self):
         return random.choice(self.value)
@@ -180,10 +199,13 @@ class Classifier:
 
 if __name__ == '__main__':
     dataS = np.loadtxt('good-moves.txt', dtype=str)
-    X = [i[:-1] for i in dataS]
-    y = [i[-1] for i in dataS]
+    X = [i[:-1] for i in dataS][ :-30] 
+    y = [i[-1] for i in dataS][-30:]
 
     dt = DecisionTree()
     dt.fit(X, y)
+    # dt.prune(dt.head, y)
 
     dt.traverse(dt.head)
+    dt.predict(y)
+
