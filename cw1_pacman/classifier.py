@@ -95,7 +95,9 @@ class DecisionTree:
             return node
 
     # for testing purposes
-    def traverse(self, node):
+    def traverse(self, node=None):
+        if node is None:
+            node = self.head
         if isinstance(node, LeafNode):
             print(node.prediction)
         else:
@@ -160,5 +162,6 @@ if __name__ == '__main__':
 
     dt = DecisionTree()
     dt.fit(X, y)
+    print(dt.traverse())
 
-    dt.traverse(dt.head)
+    # print(dt.predict('1010010000000000000000000'))
