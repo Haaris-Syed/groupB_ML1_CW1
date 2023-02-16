@@ -136,14 +136,24 @@ class DecisionTree:
         # accuracy = total number of correct predictions / all predictions
         # check if the predictions in our decision tree matches that in the test data
 
-        # what does predict return?
-        correct = 0
-        
-        beforePruning = self.head.predict(test)
+        beforePruningAccuracy = 0
+        for i in range(len(X)):
+            pred = dt.predict(X[i])
+            if pred == y[i]:
+                beforePruningAccuracy += 1
+
+        print(f"proportion correct before pruning: {beforePruningAccuracy/126}")
         node.left.parent, node.right.parent = originalNode
 
         node = pruneNode
-        afterPruning = self.head.predict(test)
+
+        afterPruningAccuracy = 0
+        for i in range(len(X)):
+            pred = dt.predict(X[i])
+            if pred == y[i]:
+                afterPruningAccuracy += 1
+        
+        print(f"proportion correct after pruning: {afterPruningAccuracy/126}")
 
         # if afterPruning >= beforePruning:
             # prune the node -> pass the tree with the pruned node
@@ -214,7 +224,7 @@ if __name__ == '__main__':
 
     dt = DecisionTree()
     dt.fit(X, y)
-    # dt.prune(dt.head, y)
+    dt.prune(dt.head, X, y)
 
     #dt.traverse(dt.head)
     
