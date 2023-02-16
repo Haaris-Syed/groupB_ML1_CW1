@@ -119,7 +119,7 @@ class DecisionTree:
     def predict(self, data):
         self.head.predict(data)
 
-    def prune(self, node, test):
+    def prune(self, node, train, test):
         if isinstance(node, LeafNode):
             return
         
@@ -137,7 +137,8 @@ class DecisionTree:
         # check if the predictions in our decision tree matches that in the test data
 
         # what does predict return?
-
+        correct = 0
+        
         beforePruning = self.head.predict(test)
         node.left.parent, node.right.parent = originalNode
 
@@ -207,5 +208,4 @@ if __name__ == '__main__':
     # dt.prune(dt.head, y)
 
     dt.traverse(dt.head)
-    dt.predict(y)
 
