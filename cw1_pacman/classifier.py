@@ -4,6 +4,7 @@
 # Use the skeleton below for the classifier and insert your code here.
 import numpy as np
 import random
+import math
 
 
 def featureIndexToSplitOn(features, data, target):
@@ -11,6 +12,60 @@ def featureIndexToSplitOn(features, data, target):
     minIndex = splitIndex.index(min(splitIndex))
 
     return minIndex
+
+
+def getEntropy(self,pos_ex,neg_ex):
+        if neg_ex == 0 or pos_ex == 0:
+            return 0
+        elif neg_ex ==  pos_ex :
+            return 0.5
+        else:
+            entropy = (-(pos_ex) * math.log(pos_ex,2))  + (-(neg_ex) * math.log(neg_ex,2))
+            return entropy
+
+        
+
+
+def InfoGain(self,data,feature_index,target):
+    neg_ex = []
+    pos_ex = []
+
+    totN_W , totN_S , totN_E ,totN_N = 0
+    totP_W , totP_S , totP_E ,totP_N = 0
+
+    # go through data and split on features --> binary split
+    for i in list(zip(data, target)):
+        (neg_ex if int(i[0][feature_index]) else pos_ex).append(i)
+    
+    for x in neg_ex:
+        if x[1] == 0:
+            totN_N = totN_N + 1
+        elif x[1] == 1:
+            totN_E = totN_E + 1
+        elif x[1] == 2:
+            totN_S = totN_S + 1
+        else:
+            totN_W = totN_W + 1
+    
+    for x in pos_ex:
+        if x[1] == 0:
+            totP_N = totN_N + 1
+        elif x[1] == 1:
+            totP_E = totN_E + 1
+        elif x[1] == 2:
+            totP_S = totN_S + 1
+        else:
+            totP_W = totN_W + 1
+
+    s = self.getEntropy(len(pos_ex),len(neg_ex))
+    sN = self.getEntropy(totP_N,totN_N)
+    sE = self.getEntropy(totP_E,totN_E)
+    sW = self.getEntropy(totP_W,totN_W)
+    sS = self.getEntropy(totP_S,totN_S)
+
+    gain = s - (((totP_N + totN_N)/neg_ex + pos_ex) * sN) - (((totP_E + totN_E)/neg_ex + pos_ex) * sE) - (((totP_S + totN_S)/neg_ex + pos_ex) * sS) - (((totP_W + totN_W)/neg_ex + pos_ex) * sW)
+    
+    return gain
 
 
 def gini(feature_index, data, target):
