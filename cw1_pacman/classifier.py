@@ -5,19 +5,7 @@
 from collections import deque
 from lib2to3.pytree import Leaf
 import numpy as np
-import random
-
-# REDUCED ERROR PRUNING:
-# pre pruning -> prune subtrees as the tree grows based on a certain criteria (could potentially remove good splits later on)
-    # faster, more efficient
-# post pruning -> allow tree to grow to its max depth (tends to lead to more success)
-    # work bottom-up, pruning subtrees based on a criteria -> if a decision node has a greater gini impurity value than parent node then prune?
-        # if the validation error is reduced after pruning a tree, then prune it
-    # convert decision node into a leaf node to remove the subtree
-    # minimal cost-complexity pruning (ccp)? -> recursively finds the 'weakest link' in the tree and removes them
-        #  different values of alpha is used       
-
-
+import random   
 
 def featureIndexToSplitOn(features, data, target):
     splitIndex = [gini(feature_index, data, target) for feature_index in range(len(features))]
@@ -63,7 +51,7 @@ class DecisionTree:
     def fit(self, data, target, node=None, features=None):
         # check if node is the root node
         if node is None:
-            self.head = DecisionNode(data, None)
+            self.head = DecisionNode(target, None)
             node = self.head
             features = list(range(len(data[0])))
 
@@ -119,47 +107,71 @@ class DecisionTree:
     def predict(self, data):
         return self.head.predict(data)
 
-    def prune(self, node, train, test):
+    def prune(self, node, X_test, y_test):
         if isinstance(node, LeafNode):
             return
         
         # pruning in bottom-up fashion so we will go to the first decision node
         # before the leaf node
-        self.prune(node.left)
-        self.prune(node.right)
-
-        # checking current decision node for pruning
-        originalNode = node
-        pruneNode = LeafNode(node.pluralityValue())
-
-        # measure accuracy with and without the decision node on test data
-        # accuracy = total number of correct predictions / all predictions
-        # check if the predictions in our decision tree matches that in the test data
-
-        beforePruningAccuracy = 0
-        for i in range(len(X)):
-            pred = dt.predict(X[i])
-            if pred == y[i]:
-                beforePruningAccuracy += 1
-
-        print(f"proportion correct before pruning: {beforePruningAccuracy/126}")
-        node.left.parent, node.right.parent = originalNode
-
-        node = pruneNode
-
-        afterPruningAccuracy = 0
-        for i in range(len(X)):
-            pred = dt.predict(X[i])
-            if pred == y[i]:
-                afterPruningAccuracy += 1
+        self.prune(node.left, X_test, y_test)
+        self.prune(node.right, X_test, y_test)
         
-        print(f"proportion correct after pruning: {afterPruningAccuracy/126}")
+        # left node
+        if isinstance(node.left, LeafNode):
+            return
+        else:
+            decisionNode = DecisionNode(node.left.value, node.left.parent)
+            pruneNode = LeafNode(decisionNode.pluralityValue())
 
-        # if afterPruning >= beforePruning:
-            # prune the node -> pass the tree with the pruned node
-        # else
-            # keep the node -> pass the tree with the original node
-            # node = originalNode
+            beforePruningAccuracy = 0
+            for i in range(len(X_test)):
+                pred = dt.predict(X_test[i])
+                if pred == y_test[i]:
+                    beforePruningAccuracy += 1
+
+            
+            node.left = pruneNode
+
+            afterPruningAccuracy = 0
+            for i in range(len(X_test)):
+                pred = dt.predict(X_test[i])
+                if pred == y_test[i]:
+                    afterPruningAccuracy += 1
+
+            if afterPruningAccuracy >= beforePruningAccuracy:
+                node.left = pruneNode
+            else:
+                node.left = decisionNode
+
+        # right node
+        if isinstance(node.right, LeafNode):
+            return
+        else:
+            decisionNode = DecisionNode(node.right.value, node.right.parent)
+            pruneNode = LeafNode(decisionNode.pluralityValue())
+
+            beforePruningAccuracy = 0
+            for i in range(len(X_test)):
+                pred = dt.predict(X_test[i])
+                if pred == y_test[i]:
+                    beforePruningAccuracy += 1
+
+            
+            node.right = pruneNode
+
+            afterPruningAccuracy = 0
+            for i in range(len(X_test)):
+                pred = dt.predict(X_test[i])
+                if pred == y_test[i]:
+                    afterPruningAccuracy += 1
+
+            if afterPruningAccuracy >= beforePruningAccuracy:
+                node.right = pruneNode
+            else:
+                node.right = decisionNode
+
+            print(f"before pruning: {beforePruningAccuracy/126}", 
+            f"after pruning: {afterPruningAccuracy/126}", f"original: {decisionNode.value}", f"pruned: {pruneNode.prediction}")
 
 
 class DecisionNode:
@@ -187,10 +199,10 @@ class DecisionNode:
 
     def predict(self, data):
         if data[self.featureIndex] == 0:
-            print(f"left: {self.featureIndex}")
+            # print(f"left: {self.featureIndex}")
             return self.left.predict(data)
         else:
-            print(f"right: {self.featureIndex}")
+            # print(f"right: {self.featureIndex}")
             return self.right.predict(data)
 
 
@@ -218,13 +230,17 @@ class Classifier:
 
 
 if __name__ == '__main__':
-    dataS = np.loadtxt('good-moves.txt', dtype=str)
-    X = [[int(c) for c in i[:-1]] for i in dataS]
-    y = [int(i[-1]) for i in dataS]
+    dataS = np.loadtxt('cw1_pacman/good-moves.txt', dtype=str)
+    training = dataS[:-30]
+    testing = [i for i in dataS if i not in training]
+    X = [[int(c) for c in i[:-1]] for i in training]
+    y = [int(i[-1]) for i in training]
+    X_test = [[int(c) for c in i[:-1]] for i in testing]
+    y_test = [int(i[-1]) for i in testing]
 
     dt = DecisionTree()
     dt.fit(X, y)
-    dt.prune(dt.head, X, y)
+    dt.prune(dt.head, X_test, y_test)
 
     #dt.traverse(dt.head)
     
