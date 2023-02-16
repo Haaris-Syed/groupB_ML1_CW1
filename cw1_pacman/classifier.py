@@ -117,7 +117,7 @@ class DecisionTree:
             self.traverse(node.left)
 
     def predict(self, data):
-        self.head.predict(data)
+        return self.head.predict(data)
 
     def prune(self, node, train, test):
         if isinstance(node, LeafNode):
@@ -166,12 +166,21 @@ class DecisionNode:
         self.featureIndex = None
 
     def pluralityValue(self):
-        return random.choice(self.value)
+        #return random.choice(self.value)
+        count_0 = self.value.count(0)
+        tot_count = len(self.value)
+        weight_0 = count_0/tot_count
+        if random.random() < weight_0:
+            return 0
+        else:
+            return 1
 
     def predict(self, data):
         if data[self.featureIndex] == 0:
+            print(f"left: {self.featureIndex}")
             return self.left.predict(data)
         else:
+            print(f"right: {self.featureIndex}")
             return self.right.predict(data)
 
 
@@ -200,12 +209,20 @@ class Classifier:
 
 if __name__ == '__main__':
     dataS = np.loadtxt('good-moves.txt', dtype=str)
-    X = [i[:-1] for i in dataS][ :-30] 
-    y = [i[-1] for i in dataS][-30:]
+    X = [[int(c) for c in i[:-1]] for i in dataS]
+    y = [int(i[-1]) for i in dataS]
 
     dt = DecisionTree()
     dt.fit(X, y)
     # dt.prune(dt.head, y)
 
-    dt.traverse(dt.head)
+    #dt.traverse(dt.head)
+    
+    # proportion of training data classified correctly
+    count = 0
+    for i in range(len(X)):
+        pred = dt.predict(X[i])
+        if pred == y[i]:
+            count += 1
 
+    print(f"proportion correct: {count/126}")
