@@ -3,6 +3,7 @@
 import numpy as np
 import random
 import math
+import random
 
 
 def featureIndexToSplitOn(features, data, target):
@@ -10,7 +11,6 @@ def featureIndexToSplitOn(features, data, target):
     minIndex = splitIndex.index(min(splitIndex))
 
     return minIndex
-
 
 def InfoGain(data, featureIndex, target):
     one, zero = [], []
@@ -128,6 +128,72 @@ class DecisionTree:
     def predict(self, data):
         return self.head.predict(data)
 
+    def prune(self, node, X_test, y_test):
+        if isinstance(node, LeafNode):
+            return
+
+        # pruning in bottom-up fashion so we will go to the first decision node
+        # before the leaf node
+        self.prune(node.left, X_test, y_test)
+        self.prune(node.right, X_test, y_test)
+
+        # left node
+        if isinstance(node.left, LeafNode):
+            return
+        else:
+            decisionNode = DecisionNode(node.left.value, node.left.parent)
+            pruneNode = LeafNode(decisionNode.pluralityValue())
+
+            beforePruningAccuracy = 0
+            for i in range(len(X_test)):
+                pred = dt.predict(X_test[i])
+                if pred == y_test[i]:
+                    beforePruningAccuracy += 1
+
+
+            node.left = pruneNode
+
+            afterPruningAccuracy = 0
+            for i in range(len(X_test)):
+                pred = dt.predict(X_test[i])
+                if pred == y_test[i]:
+                    afterPruningAccuracy += 1
+
+            if afterPruningAccuracy >= beforePruningAccuracy:
+                node.left = pruneNode
+            else:
+                node.left = decisionNode
+
+        # right node
+        if isinstance(node.right, LeafNode):
+            return
+        else:
+            decisionNode = DecisionNode(node.right.value, node.right.parent)
+            pruneNode = LeafNode(decisionNode.pluralityValue())
+
+            beforePruningAccuracy = 0
+            for i in range(len(X_test)):
+                pred = dt.predict(X_test[i])
+                if pred == y_test[i]:
+                    beforePruningAccuracy += 1
+
+
+            node.right = pruneNode
+
+            afterPruningAccuracy = 0
+            for i in range(len(X_test)):
+                pred = dt.predict(X_test[i])
+                if pred == y_test[i]:
+                    afterPruningAccuracy += 1
+
+            if afterPruningAccuracy >= beforePruningAccuracy:
+                node.right = pruneNode
+            else:
+                node.right = decisionNode
+
+            print(f"before pruning: {beforePruningAccuracy/126}",
+            f"after pruning: {afterPruningAccuracy/126}", f"original: {decisionNode.value}", f"pruned: {pruneNode.prediction}")
+
 
 class DecisionNode:
     def __init__(self, value, parent):
@@ -183,10 +249,18 @@ if __name__ == '__main__':
     dataS = np.loadtxt('good-moves.txt', dtype=str)
     X = [list(map(int, i[:-1])) for i in dataS]
     y = [int(i[-1]) for i in dataS]
+    dataS = np.loadtxt('cw1_pacman/good-moves.txt', dtype=str)
+    training = dataS[:-30]
+    testing = [i for i in dataS if i not in training]
+    X = [[int(c) for c in i[:-1]] for i in training]
+    y = [int(i[-1]) for i in training]
+    X_test = [[int(c) for c in i[:-1]] for i in testing]
+    y_test = [int(i[-1]) for i in testing]
 
     dt = DecisionTree()
     dt.fit(X, y)
     # print(dt.traverse())
+    dt.prune(dt.head, X_test, y_test)
 
     # proportion of training data classified correctly
     count = 0
