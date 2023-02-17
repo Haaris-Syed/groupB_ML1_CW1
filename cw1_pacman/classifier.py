@@ -2,6 +2,7 @@
 # Lin Li/26-dec-2021
 import numpy as np
 import random
+import math
 
 
 def featureIndexToSplitOn(features, data, target):
@@ -9,6 +10,29 @@ def featureIndexToSplitOn(features, data, target):
     minIndex = splitIndex.index(min(splitIndex))
 
     return minIndex
+
+
+def InfoGain(data, featureIndex, target):
+    one, zero = [], []
+    targetCounter = [[0] * 4, [0] * 4]
+
+    for i in list(zip(data, target)):
+        (one if int(i[0][featureIndex]) else zero).append(i)
+        targetCounter[int(i[0][featureIndex])][int(i[1])] += 1
+
+    entropy = lambda x: -sum([pi * math.log2(pi) for pi in x])
+
+    hs = entropy([len(one), len(zero)])
+    s = len(one) + len(zero)
+    targetCounterZip = list(zip(targetCounter))
+    gain = 0
+
+    for i in targetCounterZip:
+        gain += (sum(i) / s) * entropy(i)
+
+    gain = hs - gain
+
+    return gain
 
 
 def gini(featureIndex, data, target):
@@ -79,7 +103,8 @@ class DecisionTree:
                     leftData.append(i[0])
                     leftTarget.append(i[1])
 
-            newFeatures, newRightData, newLeftData = removeFeatureFromData(features, splitOnIndex, [rightData, leftData])
+            newFeatures, newRightData, newLeftData = removeFeatureFromData(features, splitOnIndex,
+                                                                           [rightData, leftData])
 
             # recurse child nodes of current node incrementing which features to split on
             node.right = self.fit(newRightData, rightTarget, DecisionNode(rightTarget, node), newFeatures)
@@ -170,4 +195,4 @@ if __name__ == '__main__':
         if pred == y[i]:
             count += 1
 
-    print(f"proportion correct: {count/126}")
+    print(f"proportion correct: {count / 126}")
