@@ -107,14 +107,14 @@ class DecisionTree:
     def predict(self, data):
         return self.head.predict(data)
 
-    def prune(self, root, node, X_test, y_test, X, y):
+    def prune(self, root, node, X_test, y_test):
         if isinstance(node, LeafNode):
             return
         
         # pruning in bottom-up fashion so we will go to the first decision node
         # before the leaf node
-        self.prune(root, node.left, X_test, y_test, X, y)
-        self.prune(root, node.right, X_test, y_test, X, y)
+        self.prune(root, node.left, X_test, y_test)
+        self.prune(root, node.right, X_test, y_test)
 
         # storing temp pointers of the decision node to restore the tree if we decide not to 
         # prune the current decision node
@@ -123,37 +123,19 @@ class DecisionTree:
         nodeValue = node.value
         nodeParent = node.parent
 
-        nodesBeforePrune = self.checkNumberOfNodesInTree(root)
-
         # check accuracy before pruning
         beforePruningAccuracy = self.checkPruningAccuracy(X_test, y_test)
 
         # check accuracy after pruning
         node = LeafNode(node.pluralityValue())
-
-        prunedTree = DecisionTree()
-        prunedTree.fit(X, y)
-
-        nodesAfterPrune = self.checkNumberOfNodesInTree(prunedTree.head)
-
-        print(len(nodesBeforePrune), len(nodesAfterPrune))
-
-        # print("DN after: ", isinstance(node, DecisionNode))
         afterPruningAccuracy = self.checkPruningAccuracy(X_test, y_test)
-
-        print(nodesBeforePrune == nodesAfterPrune)
-        # print("DN value: ", nodeValue, "LN value: ", node.prediction)
-        # print(f"before pruning: {beforePruningAccuracy/126}", f"after pruning: {afterPruningAccuracy/126}")
 
         if not afterPruningAccuracy >= beforePruningAccuracy:
             # restore original tree as we do not want to prune the current node
-            # print("not pruned")
             dNode = DecisionNode(nodeValue, nodeParent)
             dNode.left = leftChild
             dNode.right = rightChild
             node = dNode
-
-        # print("LeafNode: ", isinstance(node, LeafNode), "Decision Node: ", isinstance(node, DecisionNode))
         
 
     def checkPruningAccuracy(self, X_test, y_test):
@@ -164,24 +146,6 @@ class DecisionTree:
                 accuracy += 1
         
         return accuracy
-
-    # TESTING PURPOSES -> testing to see if the number of nodes reduces after pruning
-    def checkNumberOfNodesInTree(self, root):
-        q = deque([root])
-        nodes = []
-
-        while q:
-            for i in range(len(q)):
-                node = q.popleft()
-                if node:
-                    if isinstance(node, DecisionNode):
-                        nodes.append("DN")
-                        q.extend([node.left, node.right])
-                    else:
-                        nodes.append("LN")
-
-        return nodes
-
 
 class DecisionNode:
     def __init__(self, value, parent):
@@ -249,7 +213,7 @@ if __name__ == '__main__':
 
     dt = DecisionTree()
     dt.fit(X, y)
-    dt.prune(dt.head, dt.head, X_test, y_test, X, y)
+    dt.prune(dt.head, dt.head, X_test, y_test)
 
     #dt.traverse(dt.head)
     
