@@ -12,7 +12,7 @@ def featureIndexToSplitOn(features, data, target):
     giniValue = min(splitIndex)
     minIndex = splitIndex.index(giniValue)
 
-    return minIndex, giniValue
+    return minIndex
 
 
 def gini(feature_index, data, target):
@@ -72,7 +72,7 @@ class DecisionTree:
             return LeafNode(target[0])
         
         else:
-            splitOnIndex, giniValue = featureIndexToSplitOn(features, data, target)
+            splitOnIndex = featureIndexToSplitOn(features, data, target)
             rightData, rightTarget, leftData, leftTarget = [], [], [], []
 
             node.featureIndex = features[splitOnIndex]
@@ -107,71 +107,80 @@ class DecisionTree:
     def predict(self, data):
         return self.head.predict(data)
 
-    def prune(self, node, X_test, y_test):
+    def prune(self, root, node, X_test, y_test, X, y):
         if isinstance(node, LeafNode):
             return
         
         # pruning in bottom-up fashion so we will go to the first decision node
         # before the leaf node
-        self.prune(node.left, X_test, y_test)
-        self.prune(node.right, X_test, y_test)
+        self.prune(root, node.left, X_test, y_test, X, y)
+        self.prune(root, node.right, X_test, y_test, X, y)
+
+        # storing temp pointers of the decision node to restore the tree if we decide not to 
+        # prune the current decision node
+        leftChild = node.left
+        rightChild = node.right
+        nodeValue = node.value
+        nodeParent = node.parent
+
+        nodesBeforePrune = self.checkNumberOfNodesInTree(root)
+
+        # check accuracy before pruning
+        beforePruningAccuracy = self.checkPruningAccuracy(X_test, y_test)
+
+        # check accuracy after pruning
+        node = LeafNode(node.pluralityValue())
+
+        prunedTree = DecisionTree()
+        prunedTree.fit(X, y)
+
+        nodesAfterPrune = self.checkNumberOfNodesInTree(prunedTree.head)
+
+        print(len(nodesBeforePrune), len(nodesAfterPrune))
+
+        # print("DN after: ", isinstance(node, DecisionNode))
+        afterPruningAccuracy = self.checkPruningAccuracy(X_test, y_test)
+
+        print(nodesBeforePrune == nodesAfterPrune)
+        # print("DN value: ", nodeValue, "LN value: ", node.prediction)
+        # print(f"before pruning: {beforePruningAccuracy/126}", f"after pruning: {afterPruningAccuracy/126}")
+
+        if not afterPruningAccuracy >= beforePruningAccuracy:
+            # restore original tree as we do not want to prune the current node
+            # print("not pruned")
+            dNode = DecisionNode(nodeValue, nodeParent)
+            dNode.left = leftChild
+            dNode.right = rightChild
+            node = dNode
+
+        # print("LeafNode: ", isinstance(node, LeafNode), "Decision Node: ", isinstance(node, DecisionNode))
         
-        # left node
-        if isinstance(node.left, LeafNode):
-            return
-        else:
-            decisionNode = DecisionNode(node.left.value, node.left.parent)
-            pruneNode = LeafNode(decisionNode.pluralityValue())
 
-            beforePruningAccuracy = 0
-            for i in range(len(X_test)):
-                pred = dt.predict(X_test[i])
-                if pred == y_test[i]:
-                    beforePruningAccuracy += 1
+    def checkPruningAccuracy(self, X_test, y_test):
+        accuracy = 0
+        for i in range(len(X_test)):
+            pred = dt.predict(X_test[i])
+            if pred == y_test[i]:
+                accuracy += 1
+        
+        return accuracy
 
-            
-            node.left = pruneNode
+    # TESTING PURPOSES -> testing to see if the number of nodes reduces after pruning
+    def checkNumberOfNodesInTree(self, root):
+        q = deque([root])
+        nodes = []
 
-            afterPruningAccuracy = 0
-            for i in range(len(X_test)):
-                pred = dt.predict(X_test[i])
-                if pred == y_test[i]:
-                    afterPruningAccuracy += 1
+        while q:
+            for i in range(len(q)):
+                node = q.popleft()
+                if node:
+                    if isinstance(node, DecisionNode):
+                        nodes.append("DN")
+                        q.extend([node.left, node.right])
+                    else:
+                        nodes.append("LN")
 
-            if afterPruningAccuracy >= beforePruningAccuracy:
-                node.left = pruneNode
-            else:
-                node.left = decisionNode
-
-        # right node
-        if isinstance(node.right, LeafNode):
-            return
-        else:
-            decisionNode = DecisionNode(node.right.value, node.right.parent)
-            pruneNode = LeafNode(decisionNode.pluralityValue())
-
-            beforePruningAccuracy = 0
-            for i in range(len(X_test)):
-                pred = dt.predict(X_test[i])
-                if pred == y_test[i]:
-                    beforePruningAccuracy += 1
-
-            
-            node.right = pruneNode
-
-            afterPruningAccuracy = 0
-            for i in range(len(X_test)):
-                pred = dt.predict(X_test[i])
-                if pred == y_test[i]:
-                    afterPruningAccuracy += 1
-
-            if afterPruningAccuracy >= beforePruningAccuracy:
-                node.right = pruneNode
-            else:
-                node.right = decisionNode
-
-            print(f"before pruning: {beforePruningAccuracy/126}", 
-            f"after pruning: {afterPruningAccuracy/126}", f"original: {decisionNode.value}", f"pruned: {pruneNode.prediction}")
+        return nodes
 
 
 class DecisionNode:
@@ -230,7 +239,7 @@ class Classifier:
 
 
 if __name__ == '__main__':
-    dataS = np.loadtxt('cw1_pacman/good-moves.txt', dtype=str)
+    dataS = np.loadtxt('good-moves.txt', dtype=str)
     training = dataS[:-30]
     testing = [i for i in dataS if i not in training]
     X = [[int(c) for c in i[:-1]] for i in training]
@@ -240,7 +249,7 @@ if __name__ == '__main__':
 
     dt = DecisionTree()
     dt.fit(X, y)
-    dt.prune(dt.head, X_test, y_test)
+    dt.prune(dt.head, dt.head, X_test, y_test, X, y)
 
     #dt.traverse(dt.head)
     
