@@ -162,6 +162,7 @@ class DecisionTree:
                     node.parent.set(right, tempNode)
                     return priorAccuracyR if right else priorAccuracyL
 
+
 class DecisionNode:
     """A decision node (non leaf node) in a decision tree."""
 
