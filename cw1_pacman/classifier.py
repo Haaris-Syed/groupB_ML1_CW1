@@ -4,7 +4,7 @@ import numpy as np
 import random
 
 
-def featureIndexToSplitOn(features, data, target):
+def getFeatureIndexToSplitOn(features, data, target):
     splitIndex = [gini(featureIndex, data, target) for featureIndex in range(len(features))]
     minIndex = splitIndex.index(min(splitIndex))
 
@@ -42,6 +42,8 @@ def removeFeatureFromData(features, feature_index, data):
 
 
 class DecisionTree:
+    """A single decision tree."""
+
     def __init__(self):
         self.head = None
 
@@ -65,7 +67,7 @@ class DecisionTree:
             return LeafNode(target[0])
 
         else:
-            splitOnIndex = featureIndexToSplitOn(features, data, target)
+            splitOnIndex = getFeatureIndexToSplitOn(features, data, target)
             rightData, rightTarget, leftData, leftTarget = [], [], [], []
 
             node.featureIndex = features[splitOnIndex]
@@ -103,8 +105,9 @@ class DecisionTree:
     def predict(self, data):
         return self.head.predict(data)
 
-
 class DecisionNode:
+    """A decision node (non leaf node) in a decision tree."""
+
     def __init__(self, value, parent):
         # pointers to parent node and child nodes
         self.parent = parent
@@ -128,6 +131,10 @@ class DecisionNode:
 
 
 class LeafNode:
+    """A leaf node in a decision tree.
+    
+    Represents the prediction returned by the decision tree"""
+
     def __init__(self, prediction):
         self.prediction = prediction
 
@@ -137,21 +144,40 @@ class LeafNode:
 
 class Classifier:
     def __init__(self):
-        self.decisionTree = DecisionTree()
+        self.decisionTrees = [DecisionTree() for i in range(5)]
 
     def reset(self):
         pass
 
     def fit(self, data, target):
-        self.decisionTree.fit(data, target)
+        # fit all decision trees
+        # we apply bagging
+        for i in range(len(self.decisionTrees)):
+            data_i, target_i = self.createTrainingSet(data, target)
+            self.decisionTrees[i].fit(data_i, target_i)
+
+    def createTrainingSet(self, data, target):
+        data_i = []
+        target_i = []
+
+        for _ in range(len(data)):
+            data_i.append(random.choice(data))
+            target_i.append(random.choice(target))
+
+        return data_i, target_i
 
     def predict(self, data, legal=None):
-        predictedMoved = self.decisionTree.predict(data)
+        predictions = [tree.predict(data) for tree in self.decisionTrees]
 
-        if predictedMoved not in legal:
+        prediction_counts = [predictions.count(p) for p in range(4)]
+
+        # take predicted move as the move with the most votes by the decision trees
+        predictedMove = prediction_counts.index(max(prediction_counts))
+
+        if predictedMove not in legal:
             return random.choice(legal)
         else:
-            return predictedMoved
+            return predictedMove
 
 
 if __name__ == '__main__':
