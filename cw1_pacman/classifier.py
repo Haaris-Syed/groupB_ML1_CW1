@@ -1,25 +1,23 @@
 # classifier.py
 # Lin Li/26-dec-2021
-#
-# Use the skeleton below for the classifier and insert your code here.
 import numpy as np
 import random
 
 
 def featureIndexToSplitOn(features, data, target):
-    splitIndex = [gini(feature_index, data, target) for feature_index in range(len(features))]
+    splitIndex = [gini(featureIndex, data, target) for featureIndex in range(len(features))]
     minIndex = splitIndex.index(min(splitIndex))
 
     return minIndex
 
 
-def gini(feature_index, data, target):
+def gini(featureIndex, data, target):
     one, zero = [], []
     targetCounter = [[0] * 4, [0] * 4]
 
     for i in list(zip(data, target)):
-        (one if int(i[0][feature_index]) else zero).append(i)
-        targetCounter[int(i[0][feature_index])][int(i[1])] += 1
+        (one if int(i[0][featureIndex]) else zero).append(i)
+        targetCounter[int(i[0][featureIndex])][int(i[1])] += 1
 
     si = [len(one), len(zero)]
     s = sum(si)
@@ -50,17 +48,13 @@ class DecisionTree:
     def fit(self, data, target, node=None, features=None):
         # check if node is the root node
         if node is None:
-            self.head = DecisionNode(data, None)
+            self.head = DecisionNode(target, None)
             node = self.head
             features = list(range(len(data[0])))
 
         # if there are no example in this branch then make it a leaf with its parents plurality value for class
         if len(data) == 0:
             return LeafNode(node.parent.pluralityValue())
-
-        # keep this brain hurt but keep
-        # elif len(set(data)) == 1:
-        #     return Leaf(node.pluralityValue())
 
         # if there are no more features to split on
         elif len(features) == 0:
@@ -88,7 +82,6 @@ class DecisionTree:
             newFeatures, newRightData, newLeftData = removeFeatureFromData(features, splitOnIndex, [rightData, leftData])
 
             # recurse child nodes of current node incrementing which features to split on
-            # can change right_target to just right but do at end
             node.right = self.fit(newRightData, rightTarget, DecisionNode(rightTarget, node), newFeatures)
             node.left = self.fit(newLeftData, leftTarget, DecisionNode(leftTarget, node), newFeatures)
 
@@ -98,12 +91,14 @@ class DecisionTree:
     def traverse(self, node=None):
         if node is None:
             node = self.head
-        if isinstance(node, LeafNode):
-            print(node.prediction)
-        else:
+        if isinstance(node, DecisionNode):
+            print(node.value)
+
             # print(node.featureIndex)
             self.traverse(node.right)
             self.traverse(node.left)
+
+            print('\n')
 
     def predict(self, data):
         return self.head.predict(data)
@@ -116,28 +111,19 @@ class DecisionNode:
         self.left = None
         self.right = None
 
-        # value is all the target values the node took
+        # list of target values the node was split to
         self.value = value
 
         # feature index that we are splitting on
         self.featureIndex = None
 
     def pluralityValue(self):
-        #return random.choice(self.value)
-        count_0 = self.value.count(0)
-        tot_count = len(self.value)
-        weight_0 = count_0/tot_count
-        if random.random() < weight_0:
-            return 0
-        else:
-            return 1
+        return random.choice(self.value)
 
     def predict(self, data):
-        if data[self.featureIndex] == 0:
-            print(f"left: {self.featureIndex}")
+        if not data[self.featureIndex]:
             return self.left.predict(data)
         else:
-            print(f"right: {self.featureIndex}")
             return self.right.predict(data)
 
 
@@ -160,20 +146,22 @@ class Classifier:
         self.decisionTree.fit(data, target)
 
     def predict(self, data, legal=None):
-        # use legal moves??
-        return self.decisionTree.predict(data)
+        predictedMoved = self.decisionTree.predict(data)
+
+        if predictedMoved not in legal:
+            return random.choice(legal)
+        else:
+            return predictedMoved
 
 
 if __name__ == '__main__':
     dataS = np.loadtxt('good-moves.txt', dtype=str)
-    X = [[int(c) for c in i[:-1]] for i in dataS]
+    X = [list(map(int, i[:-1])) for i in dataS]
     y = [int(i[-1]) for i in dataS]
 
     dt = DecisionTree()
     dt.fit(X, y)
-    print(dt.traverse())
-
-    #dt.traverse(dt.head)
+    # print(dt.traverse())
 
     # proportion of training data classified correctly
     count = 0
