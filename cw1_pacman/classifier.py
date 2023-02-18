@@ -68,7 +68,6 @@ def removeFeatureFromData(features, feature_index, data):
 
 class DecisionTree:
     """A single decision tree."""
-
     def __init__(self):
         self.head = None
 
@@ -93,9 +92,11 @@ class DecisionTree:
             return LeafNode(node.pluralityValue())
 
         else:
-            splitOnIndex = getFeatureIndexToSplitOn(features, data, target)
+            # take root n feature => root(len(features)) => ~5
+            featureSubset = random.sample(features, min(len(features), 5))
+            splitOnIndex = getFeatureIndexToSplitOn(featureSubset, data, target)
             rightData, rightTarget, leftData, leftTarget = [], [], [], []
-            node.featureIndex = features[splitOnIndex]
+            node.featureIndex = featureSubset[splitOnIndex]
 
             # go through data and split on features --> binary split
             for i in list(zip(data, target)):
@@ -125,7 +126,7 @@ class DecisionTree:
             print('|   ' * level + '|-- D' + right)
             # Recursively draw the child nodes
             self.draw_node(node.left, level + 1, 'l')
-            self.draw_node(node.right, level + 1,'r')
+            self.draw_node(node.right, level + 1, 'r')
 
     def predict(self, data):
         if self.head is not None:
@@ -208,7 +209,7 @@ class LeafNode:
 
 class Classifier:
     def __init__(self):
-        self.decisionTrees = [DecisionTree() for i in range(5)]
+        self.decisionTrees = [DecisionTree() for _ in range(5)]
 
     def reset(self):
         pass
