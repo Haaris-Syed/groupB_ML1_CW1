@@ -6,14 +6,16 @@ import random
 import copy
 
 
-def getFeatureIndexToSplitOn(features, data, target):
-    splitIndex = [gini(featureIndex, data, target) for featureIndex in range(len(features))]
-    minIndex = splitIndex.index(min(splitIndex))
+def getFeatureIndexToSplitOn(features, data, target, featureSize):
+    numberOfFeatures = random.randint(5, 15)
+    splitIndex = [gini([random.choice(list(range(len(features)))) for _ in range(featureSize)], data, target)
+                  for _ in range(numberOfFeatures)]
+    minIndexSubset = min(splitIndex, key=lambda x: x[1])
 
-    return minIndex
+    return minIndexSubset[0]
 
 
-def InfoGain(data, featureIndex, target):
+def infoGain(data, featureIndex, target):
     one, zero = [], []
     targetCounter = [[0] * 4, [0] * 4]
 
@@ -36,34 +38,42 @@ def InfoGain(data, featureIndex, target):
     return gain
 
 
-def gini(featureIndex, data, target):
-    one, zero = [], []
-    targetCounter = [[0] * 4, [0] * 4]
+def gini(featureIndexes, data, target):
+    examplePerms = dict()
+    targetCounter = dict()
 
     for i in list(zip(data, target)):
-        (one if int(i[0][featureIndex]) else zero).append(i)
-        targetCounter[int(i[0][featureIndex])][int(i[1])] += 1
+        key = ''.join([str(i[0][index]) for index in featureIndexes])
+        examplePerms[key] = examplePerms.get(key, 0) + 1
+        if key in targetCounter:
+            targetCounter[key][int(i[1])] = targetCounter.get(key, dict()).get(int(i[1]), 0) + 1
+        else:
+            targetCounter[key] = dict()
 
-    si = [len(one), len(zero)]
-    s = sum(si)
+    s = sum(examplePerms.values())
     giniImpurity = 0
 
-    for i in range(2):
-        gi = sum([j ** 2 for j in targetCounter[i]])
+    for key in targetCounter:
+        gi = sum([j ** 2 for j in targetCounter[key]])
         gi = 1 - (gi / (s ** 2))
-        giniImpurity += (si[i] / s) * gi
+        giniImpurity += (examplePerms[key] / s) * gi
 
-    return giniImpurity
+    return [featureIndexes, giniImpurity]
 
 
-def removeFeatureFromData(features, feature_index, data):
-    for i in range(2):
-        for j in range(len(data[i])):
-            data[i][j] = data[i][j][:feature_index] + data[i][j][feature_index + 1:]
+def removeFeatureFromData(features, featureIndex, datas):
+    for key in datas:
+        print(key)
+        print(featureIndex)
+        for i in range(len(datas[key])):
+            for feature in featureIndex:
+                def datas[key][i][0][feature]
+            datas[key][i][0] = ''.join([list(datas[key][i]).pop(feature) for feature in featureIndex])
+            print(datas[key][0])
 
-    features.pop(feature_index)
+    [features.pop(feature) for feature in featureIndex]
 
-    return features, data[0], data[1]
+    return features, datas
 
 
 class DecisionTree:
@@ -93,26 +103,37 @@ class DecisionTree:
             return LeafNode(node.pluralityValue())
 
         else:
-            splitOnIndex = getFeatureIndexToSplitOn(features, data, target)
-            rightData, rightTarget, leftData, leftTarget = [], [], [], []
-            node.featureIndex = features[splitOnIndex]
+            splitOnIndex = getFeatureIndexToSplitOn(features, data, target, 2)
+            # rightData, rightTarget, leftData, leftTarget = [], [], [], []
+            node.featureIndex = [features[index] for index in splitOnIndex]
+            datas = dict()
 
-            # go through data and split on features --> binary split
             for i in list(zip(data, target)):
-                if int(i[0][splitOnIndex]):
-                    rightData.append(i[0])
-                    rightTarget.append(i[1])
-                else:
-                    leftData.append(i[0])
-                    leftTarget.append(i[1])
+                key = ''.join([str(i[0][index]) for index in splitOnIndex])
 
-            newFeatures, newRightData, newLeftData = removeFeatureFromData(features, splitOnIndex, [rightData, leftData])
+                if key in datas:
+                    datas[key].append([i])
+                else:
+                    datas[key] = list()
+
+            print(datas)
+
+            # # go through data and split on features
+            # for i in list(zip(data, target)):
+            #     if int(i[0][splitOnIndex]):
+            #         rightData.append(i[0])
+            #         rightTarget.append(i[1])
+            #     else:
+            #         leftData.append(i[0])
+            #         leftTarget.append(i[1])
+
+            newFeatures, newData = removeFeatureFromData(features, splitOnIndex, datas)
 
             # recurse child nodes of current node incrementing which features to split on
-            node.right = self.fit(newRightData, rightTarget, DecisionNode(rightTarget, node), newFeatures)
-            node.left = self.fit(newLeftData, leftTarget, DecisionNode(leftTarget, node), newFeatures)
-
-            return node
+            # node.right = self.fit(newRightData, rightTarget, DecisionNode(rightTarget, node), newFeatures)
+            # node.left = self.fit(newLeftData, leftTarget, DecisionNode(leftTarget, node), newFeatures)
+            #
+            # return node
 
     def draw_node(self, node=None, level=0, right=''):
         if node is None:
@@ -208,7 +229,7 @@ class LeafNode:
 
 class Classifier:
     def __init__(self):
-        self.decisionTrees = [DecisionTree() for i in range(5)]
+        self.decisionTrees = [DecisionTree() for _ in range(5)]
 
     def reset(self):
         pass
@@ -232,10 +253,9 @@ class Classifier:
 
     def predict(self, data, legal=None):
         predictions = [tree.predict(data) for tree in self.decisionTrees]
-
         prediction_counts = [predictions.count(p) for p in range(4)]
 
-        # take predicted move as the move with the most votes by the decision trees
+        # take predicted move as the move with the most votes by the decision trees -> hard voting
         predictedMove = prediction_counts.index(max(prediction_counts))
 
         if predictedMove not in legal:
@@ -256,6 +276,6 @@ if __name__ == '__main__':
 
     dt = DecisionTree()
     dt.fit(X, y)
-    print(dt.accuracy(X_test, y_test))
-    dt.prune(X_test, y_test)
-    print(dt.accuracy(X_test, y_test))
+    # print(dt.accuracy(X_test, y_test))
+    # dt.prune(X_test, y_test)
+    # print(dt.accuracy(X_test, y_test))
