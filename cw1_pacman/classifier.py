@@ -7,13 +7,21 @@ import copy
 
 
 def getFeatureIndexToSplitOn(features, data, target):
-    splitIndex = [gini(featureIndex, data, target) for featureIndex in range(len(features))]
-    minIndex = splitIndex.index(min(splitIndex))
+    featureGiniImpurities = [gini(featureIndex, data, target) for featureIndex in range(len(features))]
+    index = featureGiniImpurities.index(min(featureGiniImpurities))
+ 
+    # randomly choose between using Gini impurity or information gain to find the feature to split on
+    # if random.randint(0, 1) == 0:
+    #     featureGiniImpurities = [gini(featureIndex, data, target) for featureIndex in range(len(features))]
+    #     index = featureGiniImpurities.index(min(featureGiniImpurities))
+    # else:
+    #     featureInfoGainValues = [infoGain(featureIndex, data, target) for featureIndex in range(len(features))]
+    #     index = featureInfoGainValues.index(max(featureInfoGainValues))
 
-    return minIndex
+    return index
 
 
-def InfoGain(data, featureIndex, target):
+def infoGain(featureIndex, data, target):
     one, zero = [], []
     targetCounter = [[0] * 4, [0] * 4]
 
@@ -222,6 +230,8 @@ class Classifier:
             self.decisionTrees[i].fit(data_i, target_i)
 
     def createTrainingSet(self, data, target):
+        """Create a bagged training set"""
+
         data_i = []
         target_i = []
 
@@ -234,6 +244,7 @@ class Classifier:
     def predict(self, data, legal=None):
         predictions = [tree.predict(data) for tree in self.decisionTrees]
 
+        # number of decision trees that have predicted each of the four classes
         prediction_counts = [predictions.count(p) for p in range(4)]
 
         # take predicted move as the move with the most votes by the decision trees
