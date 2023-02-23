@@ -217,15 +217,16 @@ class LeafNode:
 
 class Classifier:
     def __init__(self):
-        self.decisionTrees = [DecisionTree() for _ in range(5)]
+        self.NUM_DECISION_TREES = 5
+        self.decisionTrees = [DecisionTree() for _ in range(self.NUM_DECISION_TREES)]
 
     def reset(self):
-        pass
+        self.decisionTrees = [DecisionTree() for _ in range(self.NUM_DECISION_TREES)]
 
     def fit(self, data, target):
         # fit all decision trees
         # we apply bagging
-        for i in range(len(self.decisionTrees)):
+        for i in range(self.NUM_DECISION_TREES):
             data_i, target_i = self.createTrainingSet(data, target)
             self.decisionTrees[i].fit(data_i, target_i)
 
