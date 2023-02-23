@@ -7,13 +7,14 @@ import copy
 
 
 def getFeatureIndexToSplitOn(features, data, target):
-    splitIndex = [gini(featureIndex, data, target) for featureIndex in range(len(features))]
+    # splitIndex = [gini(featureIndex, data, target) for featureIndex in range(len(features))]
+    splitIndex = [InfoGain(featureIndex, data, target) for featureIndex in range(len(features))]
     minIndex = splitIndex.index(min(splitIndex))
 
     return minIndex
 
 
-def InfoGain(data, featureIndex, target):
+def InfoGain(featureIndex, data, target):
     one, zero = [], []
     targetCounter = [[0] * 4, [0] * 4]
 
@@ -21,7 +22,7 @@ def InfoGain(data, featureIndex, target):
         (one if int(i[0][featureIndex]) else zero).append(i)
         targetCounter[int(i[0][featureIndex])][int(i[1])] += 1
 
-    entropy = lambda x: -sum([pi * math.log2(pi) for pi in x])
+    entropy = lambda x: -sum([pi * math.log2(pi) for pi in x if pi > 0])
 
     hs = entropy([len(one), len(zero)])
     s = len(one) + len(zero)
@@ -29,7 +30,7 @@ def InfoGain(data, featureIndex, target):
     gain = 0
 
     for i in targetCounterZip:
-        gain += (sum(i) / s) * entropy(i)
+        gain += (sum(i[0]) / s) * entropy(i[0])
 
     gain = hs - gain
 
