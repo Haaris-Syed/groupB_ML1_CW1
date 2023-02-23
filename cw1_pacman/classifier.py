@@ -7,11 +7,18 @@ import copy
 
 
 def getFeatureIndexToSplitOn(features, data, target):
-    # splitIndex = [gini(featureIndex, data, target) for featureIndex in range(len(features))]
-    splitIndex = [InfoGain(featureIndex, data, target) for featureIndex in range(len(features))]
-    minIndex = splitIndex.index(min(splitIndex))
+    featureGiniImpurities = [gini(featureIndex, data, target) for featureIndex in range(len(features))]
+    index = featureGiniImpurities.index(min(featureGiniImpurities))
 
-    return minIndex
+    # randomly choose between using Gini impurity or information gain to find the feature to split on
+    # if random.randint(0, 1) == 0:
+    #     featureGiniImpurities = [gini(featureIndex, data, target) for featureIndex in range(len(features))]
+    #     index = featureGiniImpurities.index(min(featureGiniImpurities))
+    # else:
+    #     featureInfoGainValues = [infoGain(featureIndex, data, target) for featureIndex in range(len(features))]
+    #     index = featureInfoGainValues.index(max(featureInfoGainValues))
+
+    return index
 
 
 def InfoGain(featureIndex, data, target):
@@ -210,19 +217,22 @@ class LeafNode:
 
 class Classifier:
     def __init__(self):
-        self.decisionTrees = [DecisionTree() for _ in range(5)]
+        self.NUM_DECISION_TREES = 5
+        self.decisionTrees = [DecisionTree() for _ in range(self.NUM_DECISION_TREES)]
 
     def reset(self):
-        pass
+        self.decisionTrees = [DecisionTree() for _ in range(self.NUM_DECISION_TREES)]
 
     def fit(self, data, target):
         # fit all decision trees
         # we apply bagging
-        for i in range(len(self.decisionTrees)):
+        for i in range(self.NUM_DECISION_TREES):
             data_i, target_i = self.createTrainingSet(data, target)
             self.decisionTrees[i].fit(data_i, target_i)
 
     def createTrainingSet(self, data, target):
+        """Create a bagged training set"""
+
         data_i = []
         target_i = []
 
@@ -235,6 +245,7 @@ class Classifier:
     def predict(self, data, legal=None):
         predictions = [tree.predict(data) for tree in self.decisionTrees]
 
+        # number of decision trees that have predicted each of the four classes
         prediction_counts = [predictions.count(p) for p in range(4)]
 
         # take predicted move as the move with the most votes by the decision trees
