@@ -7,6 +7,7 @@ import copy
 
 
 def getFeatureIndexToSplitOn(features, data, target):
+    # calculate gini values for each feature in the feature vector
     featureGiniImpurities = [gini(featureIndex, data, target) for featureIndex in range(len(features))]
     index = featureGiniImpurities.index(min(featureGiniImpurities))
 
@@ -45,9 +46,11 @@ def InfoGain(featureIndex, data, target):
 
 
 def gini(featureIndex, data, target):
+    # initialise one and zero example lists
     one, zero = [], []
     targetCounter = [[0] * 4, [0] * 4]
 
+    # append examples to correct list and count labels in each example
     for i in list(zip(data, target)):
         (one if int(i[0][featureIndex]) else zero).append(i)
         targetCounter[int(i[0][featureIndex])][int(i[1])] += 1
@@ -56,6 +59,7 @@ def gini(featureIndex, data, target):
     s = sum(si)
     giniImpurity = 0
 
+    # calculate the gini value
     for i in range(2):
         gi = sum([j ** 2 for j in targetCounter[i]])
         gi = 1 - (gi / (s ** 2))
