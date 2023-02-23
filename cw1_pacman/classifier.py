@@ -7,22 +7,18 @@ import copy
 
 
 def getFeatureIndexToSplitOn(features, data, target):
-    # calculate gini values for each feature in the feature vector
-    featureGiniImpurities = [gini(featureIndex, data, target) for featureIndex in range(len(features))]
-    index = featureGiniImpurities.index(min(featureGiniImpurities))
-
     # randomly choose between using Gini impurity or information gain to find the feature to split on
-    # if random.randint(0, 1) == 0:
-    #     featureGiniImpurities = [gini(featureIndex, data, target) for featureIndex in range(len(features))]
-    #     index = featureGiniImpurities.index(min(featureGiniImpurities))
-    # else:
-    #     featureInfoGainValues = [infoGain(featureIndex, data, target) for featureIndex in range(len(features))]
-    #     index = featureInfoGainValues.index(max(featureInfoGainValues))
+    if random.randint(0, 1) == 0:
+        featureGiniImpurities = [gini(featureIndex, data, target) for featureIndex in range(len(features))]
+        index = featureGiniImpurities.index(min(featureGiniImpurities))
+    else:
+        featureInfoGainValues = [infoGain(featureIndex, data, target) for featureIndex in range(len(features))]
+        index = featureInfoGainValues.index(max(featureInfoGainValues))
 
     return index
 
 
-def InfoGain(featureIndex, data, target):
+def infoGain(featureIndex, data, target):
     one, zero = [], []
     targetCounter = [[0] * 4, [0] * 4]
 
@@ -226,7 +222,7 @@ class LeafNode:
 
 class Classifier:
     def __init__(self):
-        self.NUM_DECISION_TREES = 5
+        self.NUM_DECISION_TREES = 64
         self.decisionTrees = [DecisionTree() for _ in range(self.NUM_DECISION_TREES)]
 
     def reset(self):
