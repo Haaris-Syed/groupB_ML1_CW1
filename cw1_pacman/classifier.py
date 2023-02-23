@@ -69,6 +69,7 @@ def gini(featureIndex, data, target):
 
 
 def removeFeatureFromData(features, feature_index, data):
+    # after splitting on a feature, we remove it from the feature vector
     for i in range(2):
         for j in range(len(data[i])):
             data[i][j] = data[i][j][:feature_index] + data[i][j][feature_index + 1:]
@@ -146,6 +147,8 @@ class DecisionTree:
         return 0
 
     def accuracy(self, X, y):
+        # calculates the accuracy of the decision tree
+        # accuracy = correct predictions / total predictions
         return sum(int(self.predict(X[i]) == y[i]) for i in range(len(X))) / len(X)
 
     def prune(self, xValidation, yValidation, node=None, right=None):
@@ -166,7 +169,9 @@ class DecisionTree:
                 newLeaf = LeafNode(node.pluralityValue)
                 node.parent.set(right, newLeaf)
                 newAccuracy = self.accuracy(xValidation, yValidation)
-
+                
+                # if the tree has a better accuracy (i.e. performs better) when the node is pruned,
+                # then we prune the node, else we keep it.
                 if newAccuracy > max(priorAccuracyR, priorAccuracyL):
                     del tempNode
                     print(newAccuracy)
