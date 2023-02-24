@@ -19,13 +19,16 @@ def getFeatureIndexToSplitOn(features, data, target):
 
 
 def infoGain(featureIndex, data, target):
+    # initialise one and zero example lists
     one, zero = [], []
     targetCounter = [[0] * 4, [0] * 4]
 
+    # append examples to approprite list and counts the instances of classes in each split
     for i in list(zip(data, target)):
         (one if int(i[0][featureIndex]) else zero).append(i)
         targetCounter[int(i[0][featureIndex])][int(i[1])] += 1
 
+    # equation to calculate the entropy of subset x
     entropy = lambda x: -sum([pi * math.log2(pi) for pi in x if pi > 0])
 
     hs = entropy([len(one), len(zero)])
@@ -33,6 +36,7 @@ def infoGain(featureIndex, data, target):
     targetCounterZip = list(zip(targetCounter))
     gain = 0
 
+    # calculate the gain using equation from week 2 slide 
     for i in targetCounterZip:
         gain += (sum(i[0]) / s) * entropy(i[0])
 
@@ -46,7 +50,7 @@ def gini(featureIndex, data, target):
     one, zero = [], []
     targetCounter = [[0] * 4, [0] * 4]
 
-    # append examples to correct list and count labels in each example
+    # append examples to approprite list and counts the instances of classes in each split
     for i in list(zip(data, target)):
         (one if int(i[0][featureIndex]) else zero).append(i)
         targetCounter[int(i[0][featureIndex])][int(i[1])] += 1
@@ -55,7 +59,7 @@ def gini(featureIndex, data, target):
     s = sum(si)
     giniImpurity = 0
 
-    # calculate the gini value
+    # calculate the gini value using equation from week 2 slide 
     for i in range(2):
         gi = sum([j ** 2 for j in targetCounter[i]])
         gi = 1 - (gi / (s ** 2))
@@ -157,7 +161,6 @@ class DecisionTree:
                 # then we prune the node, else we keep it.
                 if newAccuracy > max(priorAccuracyR, priorAccuracyL):
                     del tempNode
-                    print(newAccuracy)
                     return newAccuracy
                 else:
                     node.parent.set(right, tempNode)
@@ -221,6 +224,11 @@ class Classifier:
         for i in range(self.NUM_DECISION_TREES):
             data_i, target_i = self.createTrainingSet(data, target)
             self.decisionTrees[i].fit(data_i, target_i)
+
+    # uncommment if pruning is required 
+    # def prune(self):
+    #     for tree in self.decisionTrees:
+    #         tree.prune()
 
     def createTrainingSet(self, data, target):
         """Create a bagged training set"""
