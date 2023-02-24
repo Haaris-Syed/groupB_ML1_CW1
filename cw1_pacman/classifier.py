@@ -7,16 +7,12 @@ import copy
 
 
 def getFeatureIndexToSplitOn(features, data, target):
-    # calculate gini values for each feature in the feature vector
-    featureGiniImpurities = [gini(featureIndex, data, target) for featureIndex in range(len(features))]
-    index = featureGiniImpurities.index(min(featureGiniImpurities))
-
     # randomly choose between using Gini impurity or information gain to find the feature to split on
     if random.randint(0, 1) == 0:
         featureGiniImpurities = [gini(featureIndex, data, target) for featureIndex in range(len(features))]
         index = featureGiniImpurities.index(min(featureGiniImpurities))
     else:
-        featureInfoGainValues = [InfoGain(featureIndex, data, target) for featureIndex in range(len(features))]
+        featureInfoGainValues = [infoGain(featureIndex, data, target) for featureIndex in range(len(features))]
         index = featureInfoGainValues.index(max(featureInfoGainValues))
 
     return index
@@ -69,6 +65,7 @@ def gini(featureIndex, data, target):
 
 
 def removeFeatureFromData(features, feature_index, data):
+    # after splitting on a feature, we remove it from the feature vector
     for i in range(2):
         for j in range(len(data[i])):
             data[i][j] = data[i][j][:feature_index] + data[i][j][feature_index + 1:]
@@ -146,6 +143,8 @@ class DecisionTree:
         return 0
 
     def accuracy(self, X, y):
+        # calculates the accuracy of the decision tree
+        # accuracy = correct predictions / total predictions
         return sum(int(self.predict(X[i]) == y[i]) for i in range(len(X))) / len(X)
 
     def prune(self, xValidation, yValidation, node=None, right=None):
@@ -167,6 +166,8 @@ class DecisionTree:
                 node.parent.set(right, newLeaf)
                 newAccuracy = self.accuracy(xValidation, yValidation)
 
+                # if the tree has a better accuracy (i.e. performs better) when the node is pruned,
+                # then we prune the node, else we keep it.
                 if newAccuracy > max(priorAccuracyR, priorAccuracyL):
                     del tempNode
                     print(newAccuracy)
@@ -221,7 +222,7 @@ class LeafNode:
 
 class Classifier:
     def __init__(self):
-        self.NUM_DECISION_TREES = 5
+        self.NUM_DECISION_TREES = 64
         self.decisionTrees = [DecisionTree() for _ in range(self.NUM_DECISION_TREES)]
 
     def reset(self):
