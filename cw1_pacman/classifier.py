@@ -12,12 +12,12 @@ def getFeatureIndexToSplitOn(features, data, target):
     index = featureGiniImpurities.index(min(featureGiniImpurities))
 
     # randomly choose between using Gini impurity or information gain to find the feature to split on
-    # if random.randint(0, 1) == 0:
-    #     featureGiniImpurities = [gini(featureIndex, data, target) for featureIndex in range(len(features))]
-    #     index = featureGiniImpurities.index(min(featureGiniImpurities))
-    # else:
-    #     featureInfoGainValues = [infoGain(featureIndex, data, target) for featureIndex in range(len(features))]
-    #     index = featureInfoGainValues.index(max(featureInfoGainValues))
+    if random.randint(0, 1) == 0:
+        featureGiniImpurities = [gini(featureIndex, data, target) for featureIndex in range(len(features))]
+        index = featureGiniImpurities.index(min(featureGiniImpurities))
+    else:
+        featureInfoGainValues = [InfoGain(featureIndex, data, target) for featureIndex in range(len(features))]
+        index = featureInfoGainValues.index(max(featureInfoGainValues))
 
     return index
 
