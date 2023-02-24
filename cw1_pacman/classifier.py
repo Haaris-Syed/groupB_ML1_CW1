@@ -12,7 +12,7 @@ def getFeatureIndexToSplitOn(features, data, target):
         featureGiniImpurities = [gini(featureIndex, data, target) for featureIndex in range(len(features))]
         index = featureGiniImpurities.index(min(featureGiniImpurities))
     else:
-        featureInfoGainValues = [infoGain(featureIndex, data, target) for featureIndex in range(len(features))]
+        featureInfoGainValues = [InfoGain(featureIndex, data, target) for featureIndex in range(len(features))]
         index = featureInfoGainValues.index(max(featureInfoGainValues))
 
     return index
@@ -261,19 +261,3 @@ class Classifier:
         else:
             return predictedMove
 
-
-if __name__ == '__main__':
-    dataS = np.loadtxt('good-moves.txt', dtype=str)
-    training = dataS[:-30]
-    testing = [i for i in dataS if i not in training]
-
-    X = [[int(c) for c in i[:-1]] for i in training]
-    y = [int(i[-1]) for i in training]
-    X_test = [[int(c) for c in i[:-1]] for i in testing]
-    y_test = [int(i[-1]) for i in testing]
-
-    dt = DecisionTree()
-    dt.fit(X, y)
-    print(dt.accuracy(X_test, y_test))
-    dt.prune(X_test, y_test)
-    print(dt.accuracy(X_test, y_test))
