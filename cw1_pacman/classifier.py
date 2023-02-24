@@ -12,13 +12,13 @@ def getFeatureIndexToSplitOn(features, data, target):
         featureGiniImpurities = [gini(featureIndex, data, target) for featureIndex in range(len(features))]
         index = featureGiniImpurities.index(min(featureGiniImpurities))
     else:
-        featureInfoGainValues = [InfoGain(featureIndex, data, target) for featureIndex in range(len(features))]
+        featureInfoGainValues = [infoGain(featureIndex, data, target) for featureIndex in range(len(features))]
         index = featureInfoGainValues.index(max(featureInfoGainValues))
 
     return index
 
 
-def InfoGain(featureIndex, data, target):
+def infoGain(featureIndex, data, target):
     one, zero = [], []
     targetCounter = [[0] * 4, [0] * 4]
 
@@ -123,19 +123,6 @@ class DecisionTree:
             node.left = self.fit(newLeftData, leftTarget, DecisionNode(leftTarget, node), newFeatures)
 
             return node
-
-    def draw_node(self, node=None, level=0, right=''):
-        if node is None:
-            node = self.head
-        if isinstance(node, LeafNode):
-            # Draw the label of the leaf node using 'l' and the appropriate indentation
-            print('|   ' * level + '|-- L' + right)
-        else:
-            # Draw the condition of the non-leaf node using 'o' and the appropriate indentation
-            print('|   ' * level + '|-- D' + right)
-            # Recursively draw the child nodes
-            self.draw_node(node.left, level + 1, 'l')
-            self.draw_node(node.right, level + 1, 'r')
 
     def predict(self, data):
         if self.head is not None:
@@ -260,4 +247,3 @@ class Classifier:
             return random.choice(legal)
         else:
             return predictedMove
-
